@@ -1,0 +1,38 @@
+id: redis-unauth-access-code
+
+info:
+  name: Redis Unauthenticated Access By Python (Code Protocol)
+  author: 4l3x777
+  severity: critical
+  description: |
+    Checks if unauthenticated access to Redis is possible by sending the INFO command and looking for the redis_version key in the response.
+  tags: redis,unauth,code,python
+
+code:
+  - engine:
+      - python3
+    source: |
+      import sys, socket
+      # Чтение цели из STDIN
+      target = sys.stdin.read().strip()
+      host, port = target.split(":")[0], int(target.split(":")[1]) if ':' in target else 6379
+      payload = b'*1\r\n$4\r\nINFO\r\n'
+      try:
+          with socket.create_connection((host, port), timeout=3) as s:
+              s.sendall(payload)
+              response = s.recv(2048)
+          output = response.decode(errors='ignore')
+          if "redis_version" in output:
+              print("redis_version FOUND:", output.splitlines()[0])
+          elif "NOAUTH" in output:
+              print("Redis requires AUTH")
+          else:
+              print("No redis_version in response")
+      except Exception as e:
+          print("Socket error:", e)
+
+    matchers:
+      - type: word
+        part: response
+        words:
+          - "redis_version"

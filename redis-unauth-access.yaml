@@ -1,0 +1,20 @@
+id: redis-unauth-access
+
+info:
+  name: Redis Unauthenticated Access
+  author: 4l3x777
+  severity: critical
+  description: |
+    Checks if unauthenticated access to Redis is possible by sending the INFO command and looking for the redis_version key in the response.
+  tags: network,redis,unauth
+
+network:
+  - inputs:
+      - data: "*1\r\n$4\r\nINFO\r\n"
+        read: 1024
+        name: redis-info-response
+    matchers:
+      - type: word
+        part: redis-info-response
+        words:
+          - "redis_version"
